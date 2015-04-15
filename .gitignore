@@ -17,3 +17,6 @@ hs_err_pid*
 *.iws
 
 .directory
+out
+partsOfPrivateKey
+publicValue
