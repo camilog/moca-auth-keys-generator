@@ -21,3 +21,5 @@ out
 partsOfPrivateKey
 publicValue
 src/META-INF
+!lib/lanterna-2.1.9.jar
+!lib/paillier.jar
