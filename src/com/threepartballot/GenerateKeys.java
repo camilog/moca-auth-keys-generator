@@ -1,5 +1,13 @@
 package com.threepartballot;
 
+import com.googlecode.lanterna.TerminalFacade;
+import com.googlecode.lanterna.gui.Action;
+import com.googlecode.lanterna.gui.GUIScreen;
+import com.googlecode.lanterna.gui.Window;
+import com.googlecode.lanterna.gui.component.Button;
+import com.googlecode.lanterna.gui.dialog.MessageBox;
+import com.googlecode.lanterna.screen.Screen;
+
 import paillierp.key.KeyGen;
 import paillierp.key.PaillierKey;
 import paillierp.key.PaillierPrivateThresholdKey;
@@ -8,7 +16,42 @@ import java.io.*;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
-public class GenerateKeys {
+public class GenerateKeys extends Window {
+
+    public GenerateKeys() {
+        super("Generate Authority Keys");
+
+        addComponent(new Button("Generate keys", new Action() {
+            @Override
+            public void doAction() {
+                int n = Integer.parseInt(com.googlecode.lanterna.gui.dialog.TextInputDialog.showTextInputBox(getOwner(), "Parameters", "Number of Authorities", "", 4));
+                int k = Integer.parseInt(com.googlecode.lanterna.gui.dialog.TextInputDialog.showTextInputBox(getOwner(), "Parameters", "Minimum Authorities", "", 4));
+                SecureRandom r = new SecureRandom();
+
+                try {
+                    generateKeys(n, k, r);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                MessageBox.showMessageBox(getOwner(), "Finalizado", "Repartir valores publicos guardados en publicValues/\nRepartir partes de la clave privada entre las distintas autoridades, guardados en partsOfPrivateKey/\nProceso finalizado exitosamente.");
+            }
+        }));
+
+        addComponent(new Button("Exit application", new Action() {
+            @Override
+            public void doAction() {
+                // Salirse del window
+                getOwner().getScreen().clear();
+                getOwner().getScreen().refresh();
+                getOwner().getScreen().setCursorPosition(0,0);
+                getOwner().getScreen().refresh();
+                getOwner().getScreen().stopScreen();
+                System.exit(0);
+            }
+        }));
+
+    }
 
     public static void saveToFile(String fileName, PaillierKey value) throws IOException {
         ObjectOutputStream oout = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(fileName)));
@@ -32,17 +75,7 @@ public class GenerateKeys {
         }
     }
 
-    static public void main(String[] args) throws IOException {
-        SecureRandom r = new SecureRandom();
-
-        System.out.println("Bienvenida(o) a la generación de claves para la autoridad de la votación\n");
-        System.out.println("NOTA: La generación de la clave privada se realiza a través de criptografía umbral");
-        System.out.print("Ingrese el numero de partes (autoridades) en que se dividirá la clave privada: ");
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        int n = Integer.parseInt(br.readLine());
-        System.out.print("Ingrese el numero minimo de partes (autoridades) que son necesarias para revelar la clave privada: ");
-        int k = Integer.parseInt(br.readLine());
-
+    public static void generateKeys(int n, int k, SecureRandom r) throws IOException {
         // Private Key Files.
         File dir2 = new File("partsOfPrivateKey");
         dir2.mkdir();
@@ -55,10 +88,18 @@ public class GenerateKeys {
         File dir1 = new File("publicValue");
         dir1.mkdir();
         saveToFile("publicValue/publicKeyN.key", keys[0].getPublicKey().getN());
+    }
 
-        System.out.println("\nRepartir valores publicos guardados en publicValues/");
-        System.out.println("Repartir partes de la clave privada entre las distintas autoridades, guardados en partsOfPrivateKey/");
-        System.out.println("\nProceso finalizado exitosamente.");
+    static public void main(String[] args) throws IOException {
+
+        GenerateKeys myWindow = new GenerateKeys();
+        GUIScreen guiScreen = TerminalFacade.createGUIScreen();
+        Screen screen = guiScreen.getScreen();
+
+        screen.startScreen();
+        guiScreen.showWindow(myWindow, GUIScreen.Position.CENTER);
+        screen.refresh();
+        screen.stopScreen();
 
     }
 
