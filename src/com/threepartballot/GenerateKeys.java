@@ -14,9 +14,15 @@ import paillierp.key.PaillierPrivateThresholdKey;
 
 import java.io.*;
 import java.math.BigInteger;
+import java.net.URL;
+import java.net.URLConnection;
 import java.security.SecureRandom;
 
 public class GenerateKeys extends Window {
+
+    private static final String ftpServer = "cjgomez.duckdns.org";
+    private static final String user = "pi";
+    private static final String pass = "CamiloGomez";
 
     public GenerateKeys() {
         super("Generate Authority Keys");
@@ -74,8 +80,8 @@ public class GenerateKeys extends Window {
         }
     }
 
-    // Function to save to a file the public key
-    public static void saveToFile(String fileName, BigInteger value) throws IOException {
+    // Function to save to a file the public key, and upload it to the BB
+    public static void saveToFileAndUpload(String fileName, BigInteger value) throws IOException {
         ObjectOutputStream oout = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(fileName)));
         try{
             oout.writeObject(value);
@@ -84,6 +90,10 @@ public class GenerateKeys extends Window {
         } finally {
             oout.close();
         }
+
+        File publicKeyFile = new File(fileName);
+        upload(ftpServer, user, pass, "publicInformation/authorityPublicKey", publicKeyFile);
+
     }
 
     public static void generateKeys(int n, int k, SecureRandom r) throws IOException {
@@ -113,7 +123,89 @@ public class GenerateKeys extends Window {
         for (File f : dir2.listFiles())
             f.delete();
 
-        saveToFile("publicValue/publicKeyN.key", keys[0].getPublicKey().getN()); // Save in a file the PublicKey
+        saveToFileAndUpload("publicValue/publicKeyN.key", keys[0].getPublicKey().getN()); // Save in a file the PublicKey
+    }
+
+    // Upload of the file
+    /**
+     * Upload a file to a FTP server. A FTP URL is generated with the
+     * following syntax:
+     * ftp://user:password@host:port/filePath;type=i.
+     *
+     * @param ftpServer , FTP server address (optional port ':portNumber').
+     * @param user , Optional user name to login.
+     * @param password , Optional password for user.
+     * @param fileName , Destination file name on FTP server (with optional
+     *            preceding relative path, e.g. "myDir/myFile.txt").
+     * @param source , Source file to upload.
+     * @throws IOException on error.
+     */
+    public static void upload( String ftpServer, String user, String password,
+                               String fileName, File source ) throws IOException
+    {
+        if (ftpServer != null && fileName != null && source != null)
+        {
+            StringBuffer sb = new StringBuffer( "ftp://" );
+            // check for authentication else assume its anonymous access.
+            if (user != null && password != null)
+            {
+                sb.append( user );
+                sb.append( ':' );
+                sb.append( password );
+                sb.append( '@' );
+            }
+            sb.append( ftpServer );
+            sb.append( '/' );
+            sb.append( fileName );
+         /*
+          * type ==&gt; a=ASCII mode, i=image (binary) mode, d= file directory
+          * listing
+          */
+            sb.append( ";type=i" );
+
+            BufferedInputStream bis = null;
+            BufferedOutputStream bos = null;
+            try
+            {
+                URL url = new URL( sb.toString() );
+                URLConnection urlc = url.openConnection();
+
+                bos = new BufferedOutputStream( urlc.getOutputStream() );
+                bis = new BufferedInputStream( new FileInputStream( source ) );
+
+                int i;
+                // read byte by byte until end of stream
+                while ((i = bis.read()) != -1)
+                {
+                    bos.write( i );
+                }
+            }
+            finally
+            {
+                if (bis != null)
+                    try
+                    {
+                        bis.close();
+                    }
+                    catch (IOException ioe)
+                    {
+                        ioe.printStackTrace();
+                    }
+                if (bos != null)
+                    try
+                    {
+                        bos.close();
+                    }
+                    catch (IOException ioe)
+                    {
+                        ioe.printStackTrace();
+                    }
+            }
+        }
+        else
+        {
+            System.out.println( "Input not available." );
+        }
     }
 
     static public void main(String[] args) throws IOException {
