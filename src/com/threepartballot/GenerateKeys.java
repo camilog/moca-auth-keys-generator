@@ -1,10 +1,12 @@
 package com.threepartballot;
 
+import com.google.gson.Gson;
 import com.googlecode.lanterna.TerminalFacade;
 import com.googlecode.lanterna.gui.Action;
 import com.googlecode.lanterna.gui.GUIScreen;
 import com.googlecode.lanterna.gui.Window;
 import com.googlecode.lanterna.gui.component.Button;
+import com.googlecode.lanterna.gui.dialog.FileDialog;
 import com.googlecode.lanterna.gui.dialog.MessageBox;
 import com.googlecode.lanterna.screen.Screen;
 
@@ -14,15 +16,16 @@ import paillierp.key.PaillierPrivateThresholdKey;
 
 import java.io.*;
 import java.math.BigInteger;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.SecureRandom;
 
+import javax.swing.*;
+
 public class GenerateKeys extends Window {
 
-    private static final String ftpServer = "cjgomez.duckdns.org";
-    private static final String user = "pi";
-    private static final String pass = "CamiloGomez";
+    private static final String authPublicKeyServer = "http://cjgomez.duckdns.org:3000/authority_public_keys";
 
     public GenerateKeys() {
         super("Generate Authority Keys");
@@ -69,8 +72,14 @@ public class GenerateKeys extends Window {
     }
 
     // Function to save to a file the private keys
-    public static void saveToFile(String fileName, PaillierKey value) throws IOException {
-        ObjectOutputStream oout = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(fileName)));
+    public static void saveToFile(int authorityNumber, PaillierKey value) throws IOException {
+        // Chooser of the folder to save the private keys
+        // TODO: Cambiar esto a que funcione en ambiente Lanterna
+        JFileChooser f = new JFileChooser();
+        f.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        f.showSaveDialog(null);
+
+        ObjectOutputStream oout = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(f.getSelectedFile() + "/" + authorityNumber + "_privateKey.key")));
         try{
             oout.writeObject(value);
         } catch (Exception e) {
@@ -80,132 +89,116 @@ public class GenerateKeys extends Window {
         }
     }
 
-    // Function to save to a file the public key, and upload it to the BB
-    public static void saveToFileAndUpload(String fileName, BigInteger value) throws IOException {
-        ObjectOutputStream oout = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(fileName)));
-        try{
-            oout.writeObject(value);
-        } catch (Exception e) {
-            throw new IOException("Unexpected error", e);
-        } finally {
-            oout.close();
-        }
+    /*
+    public static void saveToFile(int authorityNumber, PaillierPrivateThresholdKey value) throws IOException {
+        // Open dialog to choose the folder where to store the private keys of the authorities
+        JFileChooser f = new JFileChooser();
+        f.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        f.showSaveDialog(null);
 
-        File publicKeyFile = new File(fileName);
-        upload(ftpServer, user, pass, "publicInformation/authorityPublicKey", publicKeyFile);
+        // Retrieve the value of the private key as a String to store it in the file
+        // TODO: Analizar si esta manera de guardar el archivo es la correcta, pensando en que la función .toByteArray() está teniendo problemas con la librería tal como viene
+        String valueString = new BigInteger(value.toByteArray()).toString();
 
+        // Create the file where to store the private key
+        File valueFile = new File(f.getSelectedFile(), authorityNumber + "_privateKey");
+        valueFile.createNewFile();
+
+        // Write the value of the public key in the file (if the value will be stored as a String)
+        BufferedWriter writer = new BufferedWriter(new FileWriter(valueFile, true));
+        writer.write(valueString);
+        writer.close();
+    }
+    */
+
+    // Upload of the publicKey as a JSON to the bbServer
+    static private void upload(String authPublicKeyServer, String publicKey) throws IOException {
+        // Set the URL where to POST the public key
+        URL obj = new URL(authPublicKeyServer);
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+        // Add request header
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+
+        // Create JSON with the parameters
+        String urlParameters = "{\"authority_public_key\":{\"key\":" + publicKey + "}}";
+
+        // Send post request
+        con.setDoOutput(true);
+        DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+        wr.writeBytes(urlParameters);
+        wr.flush();
+        wr.close();
+        con.getResponseCode();
     }
 
     public static void generateKeys(int n, int k, SecureRandom r) throws IOException {
         // Private Key Files.
-        // Create Directory if its not created
-        File dir1 = new File("partsOfPrivateKey");
-        dir1.mkdir();
+        File f = new File("out.log");
+        System.setOut(new PrintStream(f)); // Set output of generation of keys to ./out.log
 
-        // Delete all previous keys
-        for (File f : dir1.listFiles())
-            f.delete();
+        // Generate keys with prime factor of n of 256 bits
+        PaillierPrivateThresholdKey[] keys = KeyGen.PaillierThresholdKey(256, n, k, r.nextInt());
 
-        System.setOut(new PrintStream(new File("out.log"))); // Set output of generation of keys to ./out.log
-        PaillierPrivateThresholdKey[] keys = KeyGen.PaillierThresholdKey(256, n, k, r.nextInt()); // Generate keys with prime factor of n of 256 bits
-        System.setOut(System.out); // Recover standard output
+        f.delete(); // Delete ./out.log
 
+        // Recover standard output
+        PrintStream ps = new PrintStream(new FileOutputStream(FileDescriptor.out));
+        System.setOut(ps);
+
+        // Save in different files each authority key
         for (int i = 0; i < keys.length; i++){
-            saveToFile("partsOfPrivateKey/privateKeyPart" + i + ".key", keys[i]); // Save in different files each authority key
+            saveToFile(i, keys[i]);
         }
 
-        // Public Key File
-        // Create Directory if its not created
-        File dir2 = new File("publicValue");
-        dir2.mkdir();
+        // Upload public key to the BB (but before is necessary to make sure that the old key, if there's any, is deleted)
+        int id;
+        if ((id = uploadedKey()) > 0)
+            deleteOldKey(id);
+        upload(authPublicKeyServer, keys[0].getPublicKey().getN().toString());
 
-        // Delete all previous keys
-        for (File f : dir2.listFiles())
-            f.delete();
-
-        saveToFileAndUpload("publicValue/publicKeyN.key", keys[0].getPublicKey().getN()); // Save in a file the PublicKey
     }
 
-    // Upload of the file
-    /**
-     * Upload a file to a FTP server. A FTP URL is generated with the
-     * following syntax:
-     * ftp://user:password@host:port/filePath;type=i.
-     *
-     * @param ftpServer , FTP server address (optional port ':portNumber').
-     * @param user , Optional user name to login.
-     * @param password , Optional password for user.
-     * @param fileName , Destination file name on FTP server (with optional
-     *            preceding relative path, e.g. "myDir/myFile.txt").
-     * @param source , Source file to upload.
-     * @throws IOException on error.
-     */
-    public static void upload( String ftpServer, String user, String password,
-                               String fileName, File source ) throws IOException
-    {
-        if (ftpServer != null && fileName != null && source != null)
-        {
-            StringBuffer sb = new StringBuffer( "ftp://" );
-            // check for authentication else assume its anonymous access.
-            if (user != null && password != null)
-            {
-                sb.append( user );
-                sb.append( ':' );
-                sb.append( password );
-                sb.append( '@' );
-            }
-            sb.append( ftpServer );
-            sb.append( '/' );
-            sb.append( fileName );
-         /*
-          * type ==&gt; a=ASCII mode, i=image (binary) mode, d= file directory
-          * listing
-          */
-            sb.append( ";type=i" );
+    private static void deleteOldKey(int id) throws IOException {
+        // Set the URL to DELETE the public key of the authority
+        URL obj = new URL(authPublicKeyServer + "/" + id);
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
-            BufferedInputStream bis = null;
-            BufferedOutputStream bos = null;
-            try
-            {
-                URL url = new URL( sb.toString() );
-                URLConnection urlc = url.openConnection();
+        // Add request header
+        con.setRequestMethod("DELETE");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.getResponseCode();
 
-                bos = new BufferedOutputStream( urlc.getOutputStream() );
-                bis = new BufferedInputStream( new FileInputStream( source ) );
+    }
 
-                int i;
-                // read byte by byte until end of stream
-                while ((i = bis.read()) != -1)
-                {
-                    bos.write( i );
-                }
-            }
-            finally
-            {
-                if (bis != null)
-                    try
-                    {
-                        bis.close();
-                    }
-                    catch (IOException ioe)
-                    {
-                        ioe.printStackTrace();
-                    }
-                if (bos != null)
-                    try
-                    {
-                        bos.close();
-                    }
-                    catch (IOException ioe)
-                    {
-                        ioe.printStackTrace();
-                    }
-            }
+    public static int uploadedKey() throws IOException {
+        // Set the URL to GET the public key of the authority
+        URL obj = new URL(authPublicKeyServer);
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+        // Add request header
+        con.setRequestMethod("GET");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.getResponseCode();
+
+        // Receive the response
+        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+        String inputLine;
+        StringBuffer response = new StringBuffer();
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
         }
-        else
-        {
-            System.out.println( "Input not available." );
-        }
+        in.close();
+
+        String jsonString = response.toString();
+        Gson gson = new Gson();
+        AuthorityPublicKey[] authPublicKey = gson.fromJson(jsonString, AuthorityPublicKey[].class);
+
+        if (authPublicKey.length > 0)
+            return authPublicKey[0].id;
+
+        return 0;
     }
 
     static public void main(String[] args) throws IOException {
