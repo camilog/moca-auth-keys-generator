@@ -23,4 +23,5 @@ publicValue
 src/META-INF
 !lib/lanterna-2.1.9.jar
 !lib/paillier.jar
+!lib/gson-2.3.1.jar
 *.log
