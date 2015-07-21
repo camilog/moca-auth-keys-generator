@@ -1,77 +1,23 @@
 package com.threepartballot;
 
 import com.google.gson.Gson;
-import com.googlecode.lanterna.TerminalFacade;
-import com.googlecode.lanterna.gui.Action;
-import com.googlecode.lanterna.gui.GUIScreen;
-import com.googlecode.lanterna.gui.Window;
-import com.googlecode.lanterna.gui.component.Button;
-import com.googlecode.lanterna.gui.dialog.FileDialog;
-import com.googlecode.lanterna.gui.dialog.MessageBox;
-import com.googlecode.lanterna.screen.Screen;
-
+import paillierp.ByteUtils;
 import paillierp.key.KeyGen;
-import paillierp.key.PaillierKey;
 import paillierp.key.PaillierPrivateThresholdKey;
 
+import javax.swing.*;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.security.SecureRandom;
 
-import javax.swing.*;
-
-public class GenerateKeys extends Window {
+public class GenerateKeys_CORE {
 
     private static final String authPublicKeyServer = "http://cjgomez.duckdns.org:3000/authority_public_keys";
 
-    public GenerateKeys() {
-        super("Generate Authority Keys");
-
-        // Add button to generate keys
-        addComponent(new Button("Generate keys", new Action() {
-            @Override
-            public void doAction() {
-                // Retrieve number of authorities to share the private key
-                int n = Integer.parseInt(com.googlecode.lanterna.gui.dialog.TextInputDialog.showTextInputBox(getOwner(), "Parameters", "Number of Authorities", "", 4));
-
-                // Retrieve the minimum of authorities needed to perform decryption
-                int k = Integer.parseInt(com.googlecode.lanterna.gui.dialog.TextInputDialog.showTextInputBox(getOwner(), "Parameters", "Minimum Authorities", "", 4));
-
-                // Generate secure random number
-                SecureRandom r = new SecureRandom();
-
-                try {
-                    // Generate Keys with the different parameters
-                    generateKeys(n, k, r);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                // Final message in case of success
-                MessageBox.showMessageBox(getOwner(), "Finalizado", "Repartir valores publicos guardados en publicValues/\nRepartir partes de la clave privada entre las distintas autoridades, guardados en partsOfPrivateKey/\nProceso finalizado exitosamente.");
-            }
-        }));
-
-        // Add button to finalize application
-        addComponent(new Button("Exit application", new Action() {
-            @Override
-            public void doAction() {
-                // Close window properly and finalize application
-                getOwner().getScreen().clear();
-                getOwner().getScreen().refresh();
-                getOwner().getScreen().setCursorPosition(0, 0);
-                getOwner().getScreen().refresh();
-                getOwner().getScreen().stopScreen();
-                System.exit(0);
-            }
-        }));
-
-    }
-
-    // Function to save to a file the private keys
+    // Function to save to a file the private keys as a serialized PaillierKey
+    /*
     public static void saveToFile(int authorityNumber, PaillierKey value) throws IOException {
         // Chooser of the folder to save the private keys
         // TODO: Cambiar esto a que funcione en ambiente Lanterna
@@ -88,8 +34,10 @@ public class GenerateKeys extends Window {
             oout.close();
         }
     }
+    */
 
     /*
+    // Function to save to a file the private keys as a String
     public static void saveToFile(int authorityNumber, PaillierPrivateThresholdKey value) throws IOException {
         // Open dialog to choose the folder where to store the private keys of the authorities
         JFileChooser f = new JFileChooser();
@@ -98,7 +46,7 @@ public class GenerateKeys extends Window {
 
         // Retrieve the value of the private key as a String to store it in the file
         // TODO: Analizar si esta manera de guardar el archivo es la correcta, pensando en que la función .toByteArray() está teniendo problemas con la librería tal como viene
-        String valueString = new BigInteger(value.toByteArray()).toString();
+        String valueString = new BigInteger(myToByteArray(value)).toString();
 
         // Create the file where to store the private key
         File valueFile = new File(f.getSelectedFile(), authorityNumber + "_privateKey");
@@ -111,8 +59,37 @@ public class GenerateKeys extends Window {
     }
     */
 
+    // Function to save to a file the private keys as a BigInteger[][] with the independent values to create the same key at the other device
+    public static void saveToFile(int authorityNumber, PaillierPrivateThresholdKey value) throws IOException {
+        // Open dialog to choose the folder where to store the private keys of the authorities
+        JFileChooser f = new JFileChooser();
+        f.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        f.showSaveDialog(null);
+
+        ObjectOutputStream oout = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(f.getSelectedFile() + "/" + authorityNumber + "_privateKey")));
+        oout.writeObject(getIndependentValues(value));
+        oout.close();
+    }
+
+
     // Upload of the publicKey as a JSON to the bbServer
     static private void upload(String authPublicKeyServer, String publicKey) throws IOException {
+        // We are going also to save in a file the public Key (to give it to the tablet or non-connected to Internet devices)
+        // Open dialog to choose the folder where to store the private keys of the authorities
+        JFileChooser f = new JFileChooser();
+        f.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        f.showSaveDialog(null);
+
+        ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(f.getSelectedFile() + "/publicKeyN")));
+        oos.writeObject(new BigInteger(publicKey));
+        oos.close();
+
+        /*File publicKeyFile = new File(f.getSelectedFile() + "/publicKeyN");
+        publicKeyFile.createNewFile();
+        BufferedWriter writer = new BufferedWriter(new FileWriter(publicKeyFile, true));
+        writer.write(publicKey);
+        writer.close();
+*/
         // Set the URL where to POST the public key
         URL obj = new URL(authPublicKeyServer);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -133,15 +110,18 @@ public class GenerateKeys extends Window {
         con.getResponseCode();
     }
 
-    public static void generateKeys(int n, int k, SecureRandom r) throws IOException {
+    // Function which generate the public and private keys of the authorities, and uploads the public one
+    protected static void generateKeys(int n, int k, SecureRandom r) throws IOException {
         // Private Key Files.
+        // Set output of generation of keys to ./out.log
         File f = new File("out.log");
-        System.setOut(new PrintStream(f)); // Set output of generation of keys to ./out.log
+        System.setOut(new PrintStream(f));
 
         // Generate keys with prime factor of n of 256 bits
         PaillierPrivateThresholdKey[] keys = KeyGen.PaillierThresholdKey(256, n, k, r.nextInt());
 
-        f.delete(); // Delete ./out.log
+        // Delete ./out.log
+        f.delete();
 
         // Recover standard output
         PrintStream ps = new PrintStream(new FileOutputStream(FileDescriptor.out));
@@ -152,6 +132,7 @@ public class GenerateKeys extends Window {
             saveToFile(i, keys[i]);
         }
 
+        // Public Key Value
         // Upload public key to the BB (but before is necessary to make sure that the old key, if there's any, is deleted)
         int id;
         if ((id = uploadedKey()) > 0)
@@ -185,7 +166,7 @@ public class GenerateKeys extends Window {
         // Receive the response
         BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
         String inputLine;
-        StringBuffer response = new StringBuffer();
+        StringBuilder response = new StringBuilder();
         while ((inputLine = in.readLine()) != null) {
             response.append(inputLine);
         }
@@ -201,20 +182,51 @@ public class GenerateKeys extends Window {
         return 0;
     }
 
-    static public void main(String[] args) throws IOException {
 
-        // Create window to display options
-        GenerateKeys myWindow = new GenerateKeys();
-        GUIScreen guiScreen = TerminalFacade.createGUIScreen();
-        Screen screen = guiScreen.getScreen();
+    static private byte[] myToByteArray(PaillierPrivateThresholdKey key) {
+        byte[] result;
 
-        // Start and configuration of the screen
-        screen.startScreen();
-        guiScreen.showWindow(myWindow, GUIScreen.Position.CENTER);
-        screen.refresh();
+        // PaillierKey modified .toByteArray()
+        int size = key.getN().toByteArray().length;
+        byte[] r = new byte[size];
+        System.arraycopy(key.getN().toByteArray(), 0, r, 0, size); // This line has been modified
+        result = r;
 
-        // Stopping screen at finalize application
-        screen.stopScreen();
+        // PaillierThresholdKey exact same .toByteArray()
+        r = ByteUtils.appendInt(result, key.getL(), key.getW());
+        if (r.length == 0) {result = r;}
+        r = ByteUtils.appendBigInt(result, key.getV());
+        if (r.length == 0) {result = r;}
+        r = ByteUtils.appendBigInt(result, key.getVi());
+        if (r.length == 0) {result = r;}
+        r = ByteUtils.appendInt(r, result.length);
+        result = r;
+
+        // PaillierPrivateThresholdKey exact same .toByteArray();
+        r = ByteUtils.appendInt(result, key.getID());
+        r = ByteUtils.appendBigInt(r, key.getSi());
+        r = ByteUtils.appendInt(r, result.length);
+        result = r;
+
+        return result;
+    }
+
+    static private BigInteger[][] getIndependentValues(PaillierPrivateThresholdKey value) {
+        BigInteger n = value.getN();
+        BigInteger l = new BigInteger(String.valueOf(value.getL()));
+        BigInteger w = new BigInteger(String.valueOf(value.getW()));
+        BigInteger v = value.getV();
+        BigInteger[] vi = value.getVi();
+        BigInteger si = value.getSi();
+        BigInteger i = new BigInteger(String.valueOf(value.getID()));
+
+        BigInteger[] numbers = {n, l, w, v, si, i};
+        BigInteger[][] result = new BigInteger[2][1];
+
+        result[0] = numbers;
+        result[1] = vi;
+
+        return result;
 
     }
 
