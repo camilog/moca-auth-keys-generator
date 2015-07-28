@@ -12,7 +12,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.SecureRandom;
 
-public class GenerateKeys_CORE {
+public class GenerateKeys {
 
     private static final String authPublicKeyServer = "http://cjgomez.duckdns.org:3000/authority_public_keys";
 

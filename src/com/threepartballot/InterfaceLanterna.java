@@ -11,10 +11,10 @@ import com.googlecode.lanterna.screen.Screen;
 import java.io.*;
 import java.security.SecureRandom;
 
-public class GenerateKeys_light extends Window {
+public class InterfaceLanterna extends Window {
 
 
-    public GenerateKeys_light() {
+    public InterfaceLanterna() {
         super("Generate Authority Keys");
 
         // Add button to generate keys
@@ -33,7 +33,7 @@ public class GenerateKeys_light extends Window {
                 // Generate Keys with the different parameters
                 try {
                     // generateKeys(n, k, r);
-                    GenerateKeys_CORE.generateKeys(n, k, r);
+                    GenerateKeys.generateKeys(n, k, r);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -62,7 +62,7 @@ public class GenerateKeys_light extends Window {
     static public void main(String[] args) throws IOException {
 
         // Create window to display options
-        GenerateKeys_light myWindow = new GenerateKeys_light();
+        InterfaceLanterna myWindow = new InterfaceLanterna();
         GUIScreen guiScreen = TerminalFacade.createGUIScreen();
         Screen screen = guiScreen.getScreen();
 

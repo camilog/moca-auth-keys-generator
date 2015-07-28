@@ -1,6 +1,6 @@
 package com.threepartballot;
 
-public class GenerateKeys_swing {
+public class InterfaceAWT {
 
 
 
