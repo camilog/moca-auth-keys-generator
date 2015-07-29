@@ -14,7 +14,7 @@ import java.security.SecureRandom;
 
 public class GenerateKeys {
 
-    private static final String authPublicKeyServer = "http://cjgomez.duckdns.org:3000/authority_public_keys";
+    private static String authPublicKeyServer = "";
 
     // Function to save to a file the private keys as a serialized PaillierKey
     /*
@@ -58,6 +58,11 @@ public class GenerateKeys {
         writer.close();
     }
     */
+
+    // Function to set up the bulletin board address
+    protected static void setBBAddress(String newAddress) {
+        authPublicKeyServer = newAddress;
+    }
 
     // Function to save to a file the private keys as a BigInteger[][] with the independent values to create the same key at the other device
     public static void saveToFile(int authorityNumber, PaillierPrivateThresholdKey value) throws IOException {

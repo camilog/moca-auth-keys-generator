@@ -11,10 +11,10 @@ import com.googlecode.lanterna.screen.Screen;
 import java.io.*;
 import java.security.SecureRandom;
 
-public class InterfaceLanterna extends Window {
+public class GUILanterna extends Window {
 
 
-    public InterfaceLanterna() {
+    public GUILanterna() {
         super("Generate Authority Keys");
 
         // Add button to generate keys
@@ -62,7 +62,7 @@ public class InterfaceLanterna extends Window {
     static public void main(String[] args) throws IOException {
 
         // Create window to display options
-        InterfaceLanterna myWindow = new InterfaceLanterna();
+        GUILanterna myWindow = new GUILanterna();
         GUIScreen guiScreen = TerminalFacade.createGUIScreen();
         Screen screen = guiScreen.getScreen();
 
