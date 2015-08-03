@@ -1,6 +1,8 @@
 package com.threepartballot;
 
 import com.google.gson.Gson;
+import com.googlecode.lanterna.gui.GUIScreen;
+import com.googlecode.lanterna.gui.dialog.FileDialog;
 import paillierp.ByteUtils;
 import paillierp.key.KeyGen;
 import paillierp.key.PaillierPrivateThresholdKey;
@@ -14,7 +16,7 @@ import java.security.SecureRandom;
 
 public class GenerateKeys {
 
-    private static String authPublicKeyServer = "";
+    private static String bulletinBoardAddress = "";
 
     // Function to save to a file the private keys as a serialized PaillierKey
     /*
@@ -61,31 +63,64 @@ public class GenerateKeys {
 
     // Function to set up the bulletin board address
     protected static void setBBAddress(String newAddress) {
-        authPublicKeyServer = newAddress;
+        bulletinBoardAddress = newAddress;
+    }
+
+    // Function to retrieve the bulletin board address
+    public static String getBBAddress() {
+        return bulletinBoardAddress;
     }
 
     // Function to save to a file the private keys as a BigInteger[][] with the independent values to create the same key at the other device
-    public static void saveToFile(int authorityNumber, PaillierPrivateThresholdKey value) throws IOException {
-        // Open dialog to choose the folder where to store the private keys of the authorities
-        JFileChooser f = new JFileChooser();
-        f.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        f.showSaveDialog(null);
+    public static void saveToFile(int authorityNumber, PaillierPrivateThresholdKey value, GUIScreen guiScreen, int gui) throws IOException {
 
-        ObjectOutputStream oout = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(f.getSelectedFile() + "/" + authorityNumber + "_privateKey")));
+        // Open dialog to choose the folder where to store the private keys of the authorities
+        File folder = new File(".");
+        switch (gui) {
+
+            // Lanterna dialog
+            case 0:
+                folder = FileDialog.showSaveFileDialog(guiScreen, new File("."), "Choose path to save Public Key");
+                break;
+
+            // Swing dialog
+            case 1:
+                JFileChooser f = new JFileChooser();
+                f.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                f.showSaveDialog(null);
+                folder = f.getSelectedFile();
+                break;
+        }
+
+        ObjectOutputStream oout = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(folder.getPath() + "/" + authorityNumber + "_privateKey")));
         oout.writeObject(getIndependentValues(value));
         oout.close();
     }
 
 
-    // Upload of the publicKey as a JSON to the bbServer
-    static private void upload(String authPublicKeyServer, String publicKey) throws IOException {
+    // Upload of the publicKey as a JSON to the bbServer. Also is storing it locally
+    static private void uploadAndSave(String authPublicKeyServer, String publicKey, GUIScreen guiScreen, int gui) throws IOException {
         // We are going also to save in a file the public Key (to give it to the tablet or non-connected to Internet devices)
-        // Open dialog to choose the folder where to store the private keys of the authorities
-        JFileChooser f = new JFileChooser();
-        f.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        f.showSaveDialog(null);
 
-        ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(f.getSelectedFile() + "/publicKeyN")));
+        // Open dialog to choose the folder where to store the public key of the authority.
+        File folder = new File(".");
+        switch (gui) {
+
+            // Lanterna dialog
+            case 0:
+                folder = FileDialog.showSaveFileDialog(guiScreen, new File("."), "Choose path to save Public Key");
+                break;
+
+            // Swing dialog
+            case 1:
+                JFileChooser f = new JFileChooser();
+                f.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                f.showSaveDialog(null);
+                folder = f.getSelectedFile();
+                break;
+        }
+
+        ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(folder.getPath() + "/publicKeyN")));
         oos.writeObject(new BigInteger(publicKey));
         oos.close();
 
@@ -94,7 +129,8 @@ public class GenerateKeys {
         BufferedWriter writer = new BufferedWriter(new FileWriter(publicKeyFile, true));
         writer.write(publicKey);
         writer.close();
-*/
+        */
+
         // Set the URL where to POST the public key
         URL obj = new URL(authPublicKeyServer);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -116,7 +152,7 @@ public class GenerateKeys {
     }
 
     // Function which generate the public and private keys of the authorities, and uploads the public one
-    protected static void generateKeys(int n, int k, SecureRandom r) throws IOException {
+    protected static void generateKeys(int n, int k, SecureRandom r, GUIScreen guiScreen, int gui) throws IOException {
         // Private Key Files.
         // Set output of generation of keys to ./out.log
         File f = new File("out.log");
@@ -133,8 +169,8 @@ public class GenerateKeys {
         System.setOut(ps);
 
         // Save in different files each authority key
-        for (int i = 0; i < keys.length; i++){
-            saveToFile(i, keys[i]);
+        for (int i = 0; i < keys.length; i++) {
+            saveToFile(i, keys[i], guiScreen, gui);
         }
 
         // Public Key Value
@@ -142,13 +178,13 @@ public class GenerateKeys {
         int id;
         if ((id = uploadedKey()) > 0)
             deleteOldKey(id);
-        upload(authPublicKeyServer, keys[0].getPublicKey().getN().toString());
+        uploadAndSave(bulletinBoardAddress, keys[0].getPublicKey().getN().toString(), guiScreen, gui);
 
     }
 
     private static void deleteOldKey(int id) throws IOException {
         // Set the URL to DELETE the public key of the authority
-        URL obj = new URL(authPublicKeyServer + "/" + id);
+        URL obj = new URL(bulletinBoardAddress + "/" + id);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
         // Add request header
@@ -160,7 +196,7 @@ public class GenerateKeys {
 
     public static int uploadedKey() throws IOException {
         // Set the URL to GET the public key of the authority
-        URL obj = new URL(authPublicKeyServer);
+        URL obj = new URL(bulletinBoardAddress);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
         // Add request header
@@ -187,7 +223,7 @@ public class GenerateKeys {
         return 0;
     }
 
-
+    /*
     static private byte[] myToByteArray(PaillierPrivateThresholdKey key) {
         byte[] result;
 
@@ -215,6 +251,7 @@ public class GenerateKeys {
 
         return result;
     }
+    */
 
     static private BigInteger[][] getIndependentValues(PaillierPrivateThresholdKey value) {
         BigInteger n = value.getN();

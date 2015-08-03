@@ -2,8 +2,6 @@ package com.threepartballot;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.security.SecureRandom;
 
@@ -19,44 +17,34 @@ public class GUISwing extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JButton configurationButton = new JButton("Configure Bulletin Board address");
+        configurationButton.setSize(100, 75);
         JButton generateKeysButton = new JButton("Generate Authority Keys");
+        generateKeysButton.setSize(100,75);
 
-        configurationButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                showConfigurationWindow();
-            }
-        });
+        configurationButton.addActionListener(e -> showConfigurationWindow());
 
-        generateKeysButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                showKeysGenerationWindow();
-            }
-        });
+        generateKeysButton.addActionListener(e -> showKeysGenerationWindow());
 
-        setLayout(new GridLayout(2,1));
+        setLayout(new BoxLayout(this.getContentPane(), BoxLayout.PAGE_AXIS));
+        setSize(500, 200);
+        setLocationRelativeTo(null);
         add(configurationButton);
         add(generateKeysButton);
-        pack();
 
     }
 
     private void showConfigurationWindow() {
-        final JFrame frame = new JFrame();
+        final JFrame frame = new JFrame("Configure Bulletin Board address");
 
         JLabel addressLabel = new JLabel("Ingrese dirección del Bulletin Board");
         final JTextField addressTextField = new JTextField();
 
         JButton okButton = new JButton("Ok");
-        okButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String newAddress = addressTextField.getText();
-                GenerateKeys.setBBAddress(newAddress);
-                // frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
-                frame.setVisible(false);
-            }
+        okButton.addActionListener(e -> {
+            String newAddress = addressTextField.getText();
+            GenerateKeys.setBBAddress(newAddress);
+            // frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+            frame.setVisible(false);
         });
 
         JPanel panel = new JPanel();
@@ -69,36 +57,34 @@ public class GUISwing extends JFrame {
         frame.add(okButton);
 
         frame.pack();
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
 
     }
 
     private void showKeysGenerationWindow() {
-        final JFrame frame = new JFrame();
+        JFrame frame = new JFrame("Generate Authority Keys");
 
         JLabel nLabel = new JLabel("Ingrese N° de autoridades");
-        final JTextField nTextField = new JTextField();
+        JTextField nTextField = new JTextField();
 
         JLabel kLabel = new JLabel("Ingrese mínimo de autoridades necesarias");
-        final JTextField kTextField = new JTextField();
+        JTextField kTextField = new JTextField();
 
         JButton okButton = new JButton("Ok");
-        okButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                int n = Integer.parseInt(nTextField.getText());
-                int k = Integer.parseInt(kTextField.getText());
+        okButton.addActionListener(e -> {
+            int n = Integer.parseInt(nTextField.getText());
+            int k = Integer.parseInt(kTextField.getText());
 
-                try {
-                    GenerateKeys.generateKeys(n, k, new SecureRandom());
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-
-                // Avisar que las claves fueron creadas
-
-                frame.setVisible(false);
+            try {
+                GenerateKeys.generateKeys(n, k, new SecureRandom(), null, 1);
+            } catch (IOException e1) {
+                e1.printStackTrace();
             }
+
+            // TODO: Avisar que las claves fueron creadas
+
+            frame.setVisible(false);
         });
 
         JPanel panel = new JPanel();
@@ -113,6 +99,7 @@ public class GUISwing extends JFrame {
         frame.add(okButton);
 
         frame.pack();
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
 
     }
@@ -127,12 +114,7 @@ public class GUISwing extends JFrame {
                 createAndShowGUI();
             }
         });*/
-        EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new GUISwing().setVisible(true);
-            }
-        });
+        EventQueue.invokeLater(() -> new GUISwing().setVisible(true));
 
     }
 
