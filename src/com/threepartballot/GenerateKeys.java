@@ -17,12 +17,13 @@ import java.security.SecureRandom;
 public class GenerateKeys {
 
     private static String bulletinBoardAddress = "";
+    private static String authorityPublicKeySubDomain = "/authority_public_keys";
+    private static GUIScreen guiScreen;
 
     // Function to save to a file the private keys as a serialized PaillierKey
     /*
     public static void saveToFile(int authorityNumber, PaillierKey value) throws IOException {
         // Chooser of the folder to save the private keys
-        // TODO: Cambiar esto a que funcione en ambiente Lanterna
         JFileChooser f = new JFileChooser();
         f.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         f.showSaveDialog(null);
@@ -61,6 +62,10 @@ public class GenerateKeys {
     }
     */
 
+    protected static void setGuiScreen(GUIScreen screen) {
+        guiScreen = screen;
+    }
+
     // Function to set up the bulletin board address
     protected static void setBBAddress(String newAddress) {
         bulletinBoardAddress = newAddress;
@@ -72,24 +77,28 @@ public class GenerateKeys {
     }
 
     // Function to save to a file the private keys as a BigInteger[][] with the independent values to create the same key at the other device
-    public static void saveToFile(int authorityNumber, PaillierPrivateThresholdKey value, GUIScreen guiScreen, int gui) throws IOException {
+    public static void saveToFile(int authorityNumber, PaillierPrivateThresholdKey value, int gui) throws IOException {
 
         // Open dialog to choose the folder where to store the private keys of the authorities
         File folder = new File(".");
+
         switch (gui) {
 
             // Lanterna dialog
             case 0:
-                folder = FileDialog.showSaveFileDialog(guiScreen, new File("."), "Choose path to save Public Key");
+                // TODO: Como el diálogo en Lanterna es para elegir archivo, ver como hacer para elegir carpeta (crear archivo antes? donde?)
+                folder = FileDialog.showOpenFileDialog(guiScreen, new File("."), "Choose path to save Public Key");
                 break;
 
             // Swing dialog
             case 1:
                 JFileChooser f = new JFileChooser();
+                f.setDialogTitle("Save Private Key #" + authorityNumber);
                 f.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 f.showSaveDialog(null);
                 folder = f.getSelectedFile();
                 break;
+
         }
 
         ObjectOutputStream oout = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(folder.getPath() + "/" + authorityNumber + "_privateKey")));
@@ -98,9 +107,8 @@ public class GenerateKeys {
     }
 
 
-    // Upload of the publicKey as a JSON to the bbServer. Also is storing it locally
-    static private void uploadAndSave(String authPublicKeyServer, String publicKey, GUIScreen guiScreen, int gui) throws IOException {
-        // We are going also to save in a file the public Key (to give it to the tablet or non-connected to Internet devices)
+    // Upload of the publicKey as a JSON to the bbServer. Also is being stored locally (to give it to the tablet or non-connected to Internet devices).
+    static private void uploadAndSave(String authPublicKeyServer, String publicKey, int gui) throws IOException {
 
         // Open dialog to choose the folder where to store the public key of the authority.
         File folder = new File(".");
@@ -108,16 +116,19 @@ public class GenerateKeys {
 
             // Lanterna dialog
             case 0:
+                // TODO: Como el diálogo en Lanterna es para elegir archivo, ver como hacer para elegir carpeta (crear archivo antes? donde?)
                 folder = FileDialog.showSaveFileDialog(guiScreen, new File("."), "Choose path to save Public Key");
                 break;
 
             // Swing dialog
             case 1:
                 JFileChooser f = new JFileChooser();
+                f.setDialogTitle("Save Public Key");
                 f.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 f.showSaveDialog(null);
                 folder = f.getSelectedFile();
                 break;
+
         }
 
         ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(folder.getPath() + "/publicKeyN")));
@@ -152,8 +163,9 @@ public class GenerateKeys {
     }
 
     // Function which generate the public and private keys of the authorities, and uploads the public one
-    protected static void generateKeys(int n, int k, SecureRandom r, GUIScreen guiScreen, int gui) throws IOException {
-        // Private Key Files.
+    protected static void generateKeys(int n, int k, SecureRandom r, int gui) throws IOException {
+        /* Private Key Files */
+
         // Set output of generation of keys to ./out.log
         File f = new File("out.log");
         System.setOut(new PrintStream(f));
@@ -170,21 +182,22 @@ public class GenerateKeys {
 
         // Save in different files each authority key
         for (int i = 0; i < keys.length; i++) {
-            saveToFile(i, keys[i], guiScreen, gui);
+            saveToFile(i, keys[i], gui);
         }
 
-        // Public Key Value
+        /* Public Key Value */
+
         // Upload public key to the BB (but before is necessary to make sure that the old key, if there's any, is deleted)
         int id;
         if ((id = uploadedKey()) > 0)
             deleteOldKey(id);
-        uploadAndSave(bulletinBoardAddress, keys[0].getPublicKey().getN().toString(), guiScreen, gui);
+        uploadAndSave(bulletinBoardAddress + authorityPublicKeySubDomain, keys[0].getPublicKey().getN().toString(), gui);
 
     }
 
     private static void deleteOldKey(int id) throws IOException {
         // Set the URL to DELETE the public key of the authority
-        URL obj = new URL(bulletinBoardAddress + "/" + id);
+        URL obj = new URL(bulletinBoardAddress + authorityPublicKeySubDomain + "/" + id);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
         // Add request header
@@ -195,8 +208,9 @@ public class GenerateKeys {
     }
 
     public static int uploadedKey() throws IOException {
+
         // Set the URL to GET the public key of the authority
-        URL obj = new URL(bulletinBoardAddress);
+        URL obj = new URL(bulletinBoardAddress + authorityPublicKeySubDomain);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
         // Add request header
@@ -208,9 +222,8 @@ public class GenerateKeys {
         BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
         String inputLine;
         StringBuilder response = new StringBuilder();
-        while ((inputLine = in.readLine()) != null) {
+        while ((inputLine = in.readLine()) != null)
             response.append(inputLine);
-        }
         in.close();
 
         String jsonString = response.toString();
@@ -221,6 +234,7 @@ public class GenerateKeys {
             return authPublicKey[0].id;
 
         return 0;
+
     }
 
     /*

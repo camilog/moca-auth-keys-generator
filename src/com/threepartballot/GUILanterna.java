@@ -19,6 +19,7 @@ public class GUILanterna extends Window {
         super("Generate Authority Keys");
 
         // Panel with the current bulletin board address
+        // TODO: Poner este label en una esquina (reordenar paneles de toda la pantalla)
         Panel addressPanel = new Panel("Current Bulletin Board address");
         addressPanel.addComponent(new Label());
 
@@ -29,14 +30,16 @@ public class GUILanterna extends Window {
         // Add button to set up BB address
         addComponent(new Button("Configure Bulletin Board address", () -> {
             // Retrieve string of the bulletin board address
-            String newAddress = TextInputDialog.showTextInputBox(getOwner(), "Bulletin Board address", "New Bulletin Board address", "", 20);
+            String newAddress = TextInputDialog.showTextInputBox(getOwner(),
+                    "Bulletin Board address", "New Bulletin Board address", "", 20);
 
             // Set new bulletin board address and update label showing it
             GenerateKeys.setBBAddress(newAddress);
             updateAddressLabel((Label) addressPanel.getComponentAt(0));
 
             // Final message in case of success
-            MessageBox.showMessageBox(getOwner(), "Finalizado", "Nueva dirección del Bulletin Board exitosamente guardada.");
+            MessageBox.showMessageBox(getOwner(),
+                    "Finalizado", "Nueva dirección del Bulletin Board exitosamente guardada.");
         }));
 
         // Add button to generate keys
@@ -52,7 +55,7 @@ public class GUILanterna extends Window {
 
             // Generate Keys with the different parameters
             try {
-                GenerateKeys.generateKeys(n, k, r, getOwner(), 0);
+                GenerateKeys.generateKeys(n, k, r, 0);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -84,6 +87,7 @@ public class GUILanterna extends Window {
         // Create window to display options
         GUILanterna myWindow = new GUILanterna();
         GUIScreen guiScreen = TerminalFacade.createGUIScreen();
+        GenerateKeys.setGuiScreen(guiScreen);
         Screen screen = guiScreen.getScreen();
 
         // Start and configuration of the screen

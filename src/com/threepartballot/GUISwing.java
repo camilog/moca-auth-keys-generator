@@ -11,15 +11,15 @@ public class GUISwing extends JFrame {
         initComponents();
     }
 
+    JLabel bulletinBoardAddressLabel = new JLabel("Current Bulletin Board Address: ");
+
     private void initComponents() {
 
         setTitle("Authority Keys Generator");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JButton configurationButton = new JButton("Configure Bulletin Board address");
-        configurationButton.setSize(100, 75);
         JButton generateKeysButton = new JButton("Generate Authority Keys");
-        generateKeysButton.setSize(100,75);
 
         configurationButton.addActionListener(e -> showConfigurationWindow());
 
@@ -28,6 +28,7 @@ public class GUISwing extends JFrame {
         setLayout(new BoxLayout(this.getContentPane(), BoxLayout.PAGE_AXIS));
         setSize(500, 200);
         setLocationRelativeTo(null);
+        add(bulletinBoardAddressLabel);
         add(configurationButton);
         add(generateKeysButton);
 
@@ -43,7 +44,7 @@ public class GUISwing extends JFrame {
         okButton.addActionListener(e -> {
             String newAddress = addressTextField.getText();
             GenerateKeys.setBBAddress(newAddress);
-            // frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+            uploadBulletinBoardAddressLabel();
             frame.setVisible(false);
         });
 
@@ -62,6 +63,10 @@ public class GUISwing extends JFrame {
 
     }
 
+    private void uploadBulletinBoardAddressLabel() {
+        bulletinBoardAddressLabel.setText("Current Bulletin Board Address: " + GenerateKeys.getBBAddress());
+    }
+
     private void showKeysGenerationWindow() {
         JFrame frame = new JFrame("Generate Authority Keys");
 
@@ -77,7 +82,7 @@ public class GUISwing extends JFrame {
             int k = Integer.parseInt(kTextField.getText());
 
             try {
-                GenerateKeys.generateKeys(n, k, new SecureRandom(), null, 1);
+                GenerateKeys.generateKeys(n, k, new SecureRandom(), 1);
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
@@ -108,12 +113,6 @@ public class GUISwing extends JFrame {
 
         //Schedule a job for the event-dispatching thread:
         //creating and showing this application's GUI.
-        /*SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                createAndShowGUI();
-            }
-        });*/
         EventQueue.invokeLater(() -> new GUISwing().setVisible(true));
 
     }
