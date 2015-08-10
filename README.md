@@ -1,5 +1,5 @@
 # AuthKeyGenerator
-First part of the Voting System project [*MoCa QR*](https://github.com/CamiloG/moca_qr) Voting System project.
+First part of the [*MoCa QR*](https://github.com/CamiloG/moca_qr) Voting System project.
 
 Generates the public key to encrypt the ballots, and all the shares on which the private key is separated, to distribute among all the authorities.
 
