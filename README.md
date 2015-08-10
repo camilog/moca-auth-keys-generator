@@ -1,16 +1,16 @@
 # AuthKeyGenerator
-First part of the project [*Voter-Ballot Self Verification*](https://github.com/CamiloG/VoterBallotSelfVerificationSystem).
+First part of the MoCa QR Voting System project [*MoCa QR*](https://github.com/CamiloG/moca_qr) Voting System project.
 
 Generates the public key to encrypt the ballots, and all the shares on which the private key is separated, to distribute among all the authorities.
 
 ## Files
-1. **GenerateKeys_CORE.java**: 
-2. **GenerateKeys_light.java**:
-3. **GenerateKeys_swing.java**:
+1. **GenerateKeys.java**:
+2. **GUILanterna.java**:
+3. **GUISwing.java**:
 4. **AuthorityPublicKey.java**:
 
 ## How to Use
-* Download the .jar file [here](https://github.com/CamiloG/VoterBallotSelfVerificationSystem/blob/master/KeyGeneration_Apps/AuthKeysGenerator_light.jar?raw=true).
+* Download the .jar file [here](https://github.com/CamiloG/moca_qr/blob/master/KeyGeneration_Apps/AuthKeysGenerator_light.jar?raw=true).
 * Put the file authKeyGenerator.jar in the project folder.
 * Execute authKeyGenerator.jar with `$ java -jar authKeyGenerator.jar`
 * First, the program asks how many authorities will be on the election.
