@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.control.Label?>
+<GridPane xmlns:fx="http://javafx.com/fxml" alignment="CENTER" hgap="10" vgap="10" styleClass="root">
+
+    <Text id="title" text="Authority Keys Generator"
+          GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2"/>
+
+    <Label text="Current Bulletin Board address"
+           GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="2"/>
+
+    <Label id="current_bb_address" text=""
+           GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+
+
+</GridPane>
