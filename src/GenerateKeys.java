@@ -1,9 +1,6 @@
-package com.threepartballot;
-
 import com.google.gson.Gson;
 import com.googlecode.lanterna.gui.GUIScreen;
 import com.googlecode.lanterna.gui.dialog.FileDialog;
-import paillierp.ByteUtils;
 import paillierp.key.KeyGen;
 import paillierp.key.PaillierPrivateThresholdKey;
 
@@ -11,7 +8,6 @@ import javax.swing.*;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.SecureRandom;
 
