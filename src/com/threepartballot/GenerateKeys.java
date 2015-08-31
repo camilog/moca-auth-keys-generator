@@ -11,6 +11,7 @@ import javax.swing.*;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.SecureRandom;
 
@@ -18,6 +19,7 @@ public class GenerateKeys {
 
     private static String bulletinBoardAddress = "";
     private static String authorityPublicKeySubDomain = "/authority_public_keys";
+    private static String dummyShareSubDomain = "/dummy_share";
     private static GUIScreen guiScreen;
 
     // Function to save to a file the private keys as a serialized PaillierKey
@@ -171,7 +173,7 @@ public class GenerateKeys {
         System.setOut(new PrintStream(f));
 
         // Generate keys with prime factor of n of 256 bits
-        PaillierPrivateThresholdKey[] keys = KeyGen.PaillierThresholdKey(256, n, k, r.nextInt());
+        PaillierPrivateThresholdKey[] keys = KeyGen.PaillierThresholdKey(256, n+1, k+1, r.nextInt());
 
         // Delete ./out.log
         f.delete();
@@ -180,8 +182,10 @@ public class GenerateKeys {
         PrintStream ps = new PrintStream(new FileOutputStream(FileDescriptor.out));
         System.setOut(ps);
 
+        uploadDummyShare(keys[0]);
+
         // Save in different files each authority key
-        for (int i = 0; i < keys.length; i++) {
+        for (int i = 1; i < keys.length; i++) {
             saveToFile(i, keys[i], gui);
         }
 
@@ -192,6 +196,30 @@ public class GenerateKeys {
         if ((id = uploadedKey()) > 0)
             deleteOldKey(id);
         uploadAndSave(bulletinBoardAddress + authorityPublicKeySubDomain, keys[0].getPublicKey().getN().toString(), gui);
+
+    }
+
+    private static void uploadDummyShare(PaillierPrivateThresholdKey key) throws IOException {
+
+        // Set the URL where to POST the dummy share key
+        URL obj = new URL(dummyShareSubDomain);
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+        // Add request header
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+
+        // Create JSON with the parameters
+        String dummyShare = new BigInteger(key.toByteArray()).toString();
+        String urlParameters = "{\"dummy_share\":{\"key\":" + dummyShare + "}}";
+
+        // Send post request
+        con.setDoOutput(true);
+        DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+        wr.writeBytes(urlParameters);
+        wr.flush();
+        wr.close();
+        con.getResponseCode();
 
     }
 
@@ -236,36 +264,6 @@ public class GenerateKeys {
         return 0;
 
     }
-
-    /*
-    static private byte[] myToByteArray(PaillierPrivateThresholdKey key) {
-        byte[] result;
-
-        // PaillierKey modified .toByteArray()
-        int size = key.getN().toByteArray().length;
-        byte[] r = new byte[size];
-        System.arraycopy(key.getN().toByteArray(), 0, r, 0, size); // This line has been modified
-        result = r;
-
-        // PaillierThresholdKey exact same .toByteArray()
-        r = ByteUtils.appendInt(result, key.getL(), key.getW());
-        if (r.length == 0) {result = r;}
-        r = ByteUtils.appendBigInt(result, key.getV());
-        if (r.length == 0) {result = r;}
-        r = ByteUtils.appendBigInt(result, key.getVi());
-        if (r.length == 0) {result = r;}
-        r = ByteUtils.appendInt(r, result.length);
-        result = r;
-
-        // PaillierPrivateThresholdKey exact same .toByteArray();
-        r = ByteUtils.appendInt(result, key.getID());
-        r = ByteUtils.appendBigInt(r, key.getSi());
-        r = ByteUtils.appendInt(r, result.length);
-        result = r;
-
-        return result;
-    }
-    */
 
     static private BigInteger[][] getIndependentValues(PaillierPrivateThresholdKey value) {
         BigInteger n = value.getN();
