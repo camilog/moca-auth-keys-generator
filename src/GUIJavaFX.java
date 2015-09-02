@@ -9,7 +9,7 @@ public class GUIJavaFX extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
 
-        Parent root = FXMLLoader.load(getClass().getResource("guiJavaFX.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("mainWindow.fxml"));
 
         Scene scene = new Scene(root, 800, 600);
 
