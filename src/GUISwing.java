@@ -1,3 +1,4 @@
+/*
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
@@ -116,3 +117,4 @@ public class GUISwing extends JFrame {
     }
 
 }
+*/

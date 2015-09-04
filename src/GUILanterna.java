@@ -1,3 +1,4 @@
+/*
 import com.googlecode.lanterna.TerminalFacade;
 import com.googlecode.lanterna.gui.GUIScreen;
 import com.googlecode.lanterna.gui.Window;
@@ -99,3 +100,4 @@ public class GUILanterna extends Window {
     }
 
 }
+*/

@@ -10,7 +10,7 @@ Generates the public key to encrypt the ballots, and all the shares on which the
 
 3. **GUISwing.java**: Class that manages the Java-Swing GUI environment, for all the devices that can run a graphics interface.
 
-4. **AuthorityPublicKey.java**: Class for the creation of the object after the retrieving of the JSON from the Bulletin Board server.
+4. **AuthorityPublicKeyResponse.java**: Class for the creation of the object after the retrieving of the JSON from the Bulletin Board server.
 
 ## How to Use
 * Download the .jar file [here](https://github.com/CamiloG/moca_qr/blob/master/KeyGeneration_Apps/AuthKeysGenerator_light.jar?raw=true).
