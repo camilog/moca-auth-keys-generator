@@ -16,7 +16,7 @@ public class GenerationWindowController {
 
         int n = Integer.parseInt(authorities_number.getText());
         int k = Integer.parseInt(minimum_number.getText());
-        GenerateKeys.generateKeys(n, k, new SecureRandom(), 1);
+        GenerateKeys.generateKeys(n, k, new SecureRandom());
 
         // Close window
         ((Node) (actionEvent.getSource())).getScene().getWindow().hide();

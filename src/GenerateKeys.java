@@ -1,9 +1,9 @@
 import com.google.gson.Gson;
-import com.googlecode.lanterna.gui.GUIScreen;
-import com.googlecode.lanterna.gui.dialog.FileDialog;
+import javafx.stage.FileChooser;
 import paillierp.key.KeyGen;
 import paillierp.key.PaillierPrivateThresholdKey;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.swing.*;
 import java.io.*;
 import java.math.BigInteger;
@@ -16,6 +16,7 @@ public class GenerateKeys {
     private static String bulletinBoardAddress = "";
     private static String authorityPublicKeySubDomain = "/authority_public_key";
     private static String dummyShareSubDomain = "/dummy_share";
+    private static String user, pass;
 
     // Function which generate the public and private keys of the authorities, and uploads the public one
     protected static void generateKeys(int n, int k, SecureRandom r) throws IOException {
@@ -40,14 +41,14 @@ public class GenerateKeys {
 
         // Save in different files each authority key
         for (int i = 1; i < keys.length; i++) {
-            saveToFile(i, keys[i]);
+            savePrivateKeyToFile(i, keys[i]);
         }
 
         /* Public Key Value */
 
         // Upload public key to the BB (but before is necessary to make sure that the old key, if there's any, is deleted)
         deleteOldKey();
-        uploadAndSave(keys[0].getPublicKey().getN().toString(), k);
+        uploadAndSavePublicKey(keys[0].getPublicKey().getN().toString(), k);
 
     }
 
@@ -76,13 +77,12 @@ public class GenerateKeys {
     }
 
     // Function to save to a file the private keys as a BigInteger[][] with the independent values to create the same key at the other device
-    public static void saveToFile(int authorityNumber, PaillierPrivateThresholdKey value) throws IOException {
+    public static void savePrivateKeyToFile(int authorityNumber, PaillierPrivateThresholdKey value) throws IOException {
 
-        JFileChooser f = new JFileChooser();
-        f.setDialogTitle("Save Private Key #" + authorityNumber);
-        f.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        f.showSaveDialog(null);
-        File folder = f.getSelectedFile();
+        // Choose folder where to save the private key (external storage)
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Public Key");
+        File folder = fileChooser.showSaveDialog(null);
 
         ObjectOutputStream oout = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(folder.getPath() + "/" + authorityNumber + "_privateKey")));
         oout.writeObject(getIndependentValues(value));
@@ -131,24 +131,16 @@ public class GenerateKeys {
     }
 
     // Upload of the publicKey as a JSON to the bbServer. Also is being stored locally (to give it to the tablet or non-connected to Internet devices).
-    static private void uploadAndSave(String publicKey, int threshold) throws IOException {
+    static private void uploadAndSavePublicKey(String publicKey, int threshold) throws IOException {
 
-        JFileChooser f = new JFileChooser();
-        f.setDialogTitle("Save Public Key");
-        f.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        f.showSaveDialog(null);
-        File folder = f.getSelectedFile();
+        // Choose folder where to save the public key
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Public Key");
+        File folder = fileChooser.showSaveDialog(null);
 
         ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(folder.getPath() + "/publicKeyN")));
         oos.writeObject(new BigInteger(publicKey));
         oos.close();
-
-        /*File publicKeyFile = new File(f.getSelectedFile() + "/publicKeyN");
-        publicKeyFile.createNewFile();
-        BufferedWriter writer = new BufferedWriter(new FileWriter(publicKeyFile, true));
-        writer.write(publicKey);
-        writer.close();
-        */
 
         // Set the URL where to POST the public key
         URL obj = new URL(bulletinBoardAddress + authorityPublicKeySubDomain);
