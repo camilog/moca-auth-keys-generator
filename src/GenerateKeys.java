@@ -3,8 +3,6 @@ import javafx.stage.FileChooser;
 import paillierp.key.KeyGen;
 import paillierp.key.PaillierPrivateThresholdKey;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.swing.*;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
@@ -36,8 +34,7 @@ public class GenerateKeys {
         PrintStream ps = new PrintStream(new FileOutputStream(FileDescriptor.out));
         System.setOut(ps);
 
-        // TODO: serializar de buena manera la key para subirla al BB
-        // uploadDummyShare(keys[0]);
+        uploadDummyShare(keys[0]);
 
         // Save in different files each authority key
         for (int i = 1; i < keys.length; i++) {
@@ -53,6 +50,11 @@ public class GenerateKeys {
     }
 
     private static void uploadDummyShare(PaillierPrivateThresholdKey key) throws IOException {
+
+        BigInteger[][] dummyShareBigIntegerArrays = getIndependentValues(key);
+        String dummyShareJson = new Gson().toJson(new PrivateKey(dummyShareBigIntegerArrays));
+
+        // TODO: Fix the values to upload to the BB
 
         // Set the URL where to POST the dummy share key
         URL obj = new URL(bulletinBoardAddress + dummyShareSubDomain);
@@ -84,9 +86,12 @@ public class GenerateKeys {
         fileChooser.setTitle("Save Public Key");
         File folder = fileChooser.showSaveDialog(null);
 
-        ObjectOutputStream oout = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(folder.getPath() + "/" + authorityNumber + "_privateKey")));
-        oout.writeObject(getIndependentValues(value));
-        oout.close();
+        // Serialize private key as a Json
+        String privateKeyJson = new Gson().toJson(new PrivateKey(getIndependentValues(value)));
+
+        // Save JSON in a simple file
+        PrintStream privateKeyOut = new PrintStream(folder.getPath() + "/" + authorityNumber + "_privateKey");
+        privateKeyOut.println(privateKeyJson);
 
     }
 
@@ -191,48 +196,5 @@ public class GenerateKeys {
     public static String getBBAddress() {
         return bulletinBoardAddress;
     }
-
-
-
-    // Function to save to a file the private keys as a serialized PaillierKey
-    /*
-    public static void saveToFile(int authorityNumber, PaillierKey value) throws IOException {
-        // Chooser of the folder to save the private keys
-        JFileChooser f = new JFileChooser();
-        f.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        f.showSaveDialog(null);
-
-        ObjectOutputStream oout = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(f.getSelectedFile() + "/" + authorityNumber + "_privateKey.key")));
-        try{
-            oout.writeObject(value);
-        } catch (Exception e) {
-            throw new IOException("Unexpected error", e);
-        } finally {
-            oout.close();
-        }
-    }
-    */
-
-    /*
-    // Function to save to a file the private keys as a String
-    public static void saveToFile(int authorityNumber, PaillierPrivateThresholdKey value) throws IOException {
-        // Open dialog to choose the folder where to store the private keys of the authorities
-        JFileChooser f = new JFileChooser();
-        f.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        f.showSaveDialog(null);
-
-        // Retrieve the value of the private key as a String to store it in the file
-        String valueString = new BigInteger(myToByteArray(value)).toString();
-
-        // Create the file where to store the private key
-        File valueFile = new File(f.getSelectedFile(), authorityNumber + "_privateKey");
-        valueFile.createNewFile();
-
-        // Write the value of the public key in the file (if the value will be stored as a String)
-        BufferedWriter writer = new BufferedWriter(new FileWriter(valueFile, true));
-        writer.write(valueString);
-        writer.close();
-    }
-    */
 
 }
