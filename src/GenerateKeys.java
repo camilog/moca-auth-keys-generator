@@ -14,12 +14,12 @@ public class GenerateKeys {
     private static String bulletinBoardAddress = "";
     private static String authorityPublicKeySubDomain = "/authority_public_key";
     private static String dummyShareSubDomain = "/dummy_share";
-    private static String user, pass;
+
+    // TODO: Implement user and pass verification in order to upload the authority public key and the dummy share
+    // private static String user, pass;
 
     // Function which generate the public and private keys of the authorities, and uploads the public one
     protected static void generateKeys(int n, int k, SecureRandom r) throws IOException {
-        /* Private Key Files */
-
         // Set output of generation of keys to ./out.log
         File f = new File("out.log");
         System.setOut(new PrintStream(f));
@@ -27,13 +27,12 @@ public class GenerateKeys {
         // Generate keys with prime factor of n of 256 bits
         PaillierPrivateThresholdKey[] keys = KeyGen.PaillierThresholdKey(256, n + 1, k + 1, r.nextInt());
 
-        // Delete ./out.log
+        // Delete ./out.log and recover standard output
         f.delete();
-
-        // Recover standard output
         PrintStream ps = new PrintStream(new FileOutputStream(FileDescriptor.out));
         System.setOut(ps);
 
+        // Upload dummy share of the private key in order to combine the partial decryptions
         uploadDummyShare(keys[0]);
 
         // Save in different files each authority key
@@ -41,9 +40,7 @@ public class GenerateKeys {
             savePrivateKeyToFile(i, keys[i]);
         }
 
-        /* Public Key Value */
-
-        // Upload public key to the BB (but before is necessary to make sure that the old key, if there's any, is deleted)
+        // Upload to the BB and save locally the public key (but before is necessary to make sure that the old key, if there's any, is deleted)
         deleteOldKey();
         uploadAndSavePublicKey(keys[0].getPublicKey().getN().toString(), k);
 
@@ -51,10 +48,8 @@ public class GenerateKeys {
 
     private static void uploadDummyShare(PaillierPrivateThresholdKey key) throws IOException {
 
+        // Get the values of the dummy share in order to upload them to the BB
         BigInteger[][] dummyShareBigIntegerArrays = getIndependentValues(key);
-        String dummyShareJson = new Gson().toJson(new PrivateKey(dummyShareBigIntegerArrays));
-
-        // TODO: Fix the values to upload to the BB
 
         // Set the URL where to POST the dummy share key
         URL obj = new URL(bulletinBoardAddress + dummyShareSubDomain);
@@ -65,8 +60,7 @@ public class GenerateKeys {
         con.setRequestProperty("Content-Type", "application/json");
 
         // Create JSON with the parameters
-        String dummyShare = getIndependentValues(key).toString();
-        String urlParameters = "{\"value\":" + dummyShare + "}";
+        String urlParameters = new Gson().toJson(new PrivateKey(dummyShareBigIntegerArrays));
 
         // Send post request
         con.setDoOutput(true);
@@ -78,7 +72,7 @@ public class GenerateKeys {
 
     }
 
-    // Function to save to a file the private keys as a BigInteger[][] with the independent values to create the same key at the other device
+    // Function to save to a file the private keys as a JSON representing a BigInteger[][] with the independent values to create the same key at the other device
     public static void savePrivateKeyToFile(int authorityNumber, PaillierPrivateThresholdKey value) throws IOException {
 
         // Choose folder where to save the private key (external storage)
@@ -115,11 +109,12 @@ public class GenerateKeys {
             response.append(inputLine);
         in.close();
 
+        // Serialize the JSON response to an Object (AuthorityPublicKeyResponse)
         String jsonString = response.toString();
-
         Gson gson = new Gson();
         AuthorityPublicKeyResponse authorityPublicKeyResponse = gson.fromJson(jsonString, AuthorityPublicKeyResponse.class);
 
+        // Check if there's already a key on the BB, if so, delete it
         if (authorityPublicKeyResponse.total_rows > 0) {
 
             // Set the URL to DELETE the public key of the authority
@@ -143,6 +138,7 @@ public class GenerateKeys {
         fileChooser.setTitle("Save Public Key");
         File folder = fileChooser.showSaveDialog(null);
 
+        // Save locally the public key in a file called '/publicKeyN'
         ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(folder.getPath() + "/publicKeyN")));
         oos.writeObject(new BigInteger(publicKey));
         oos.close();
@@ -167,6 +163,7 @@ public class GenerateKeys {
         con.getResponseCode();
     }
 
+    // Function to retrieve the values that make a private key, in order to serialize it and save it into a file
     static private BigInteger[][] getIndependentValues(PaillierPrivateThresholdKey value) {
 
         BigInteger n = value.getN();
