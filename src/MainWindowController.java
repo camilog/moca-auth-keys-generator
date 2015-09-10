@@ -1,9 +1,10 @@
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -11,15 +12,15 @@ import java.io.IOException;
 public class MainWindowController {
 
     @FXML
-    private Label bulletin_board_label;
+    private static Text bulletin_board_label;
 
     @FXML
-    protected void handleConfigureBBAddressButtonAction(ActionEvent actionEvent) throws IOException {
+    protected void handleConfigureBBAddressButtonAction(ActionEvent actionEvent) throws IOException, InterruptedException {
 
         Parent root = FXMLLoader.load(getClass().getResource("configWindow.fxml"));
         Stage stage = new Stage();
         stage.setTitle("Configure Bulletin Board Address");
-        stage.setScene(new Scene(root, 400, 200));
+        stage.setScene(new Scene(root, 400, 400));
         stage.show();
 
     }
@@ -34,4 +35,5 @@ public class MainWindowController {
         stage.show();
 
     }
+
 }

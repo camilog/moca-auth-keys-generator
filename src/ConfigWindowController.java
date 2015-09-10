@@ -17,8 +17,6 @@ public class ConfigWindowController {
         // Set new BB address
         GenerateKeys.setBBAddress(newBBAddress);
 
-        // TODO: Update label showing BB address
-
         // Close window
         ((Node) (actionEvent.getSource())).getScene().getWindow().hide();
 
