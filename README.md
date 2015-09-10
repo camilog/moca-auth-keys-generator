@@ -18,7 +18,6 @@ Generates the public key to encrypt the ballots, and all the shares on which the
 
 ## External Libraries
 1. **[Paillier Threshol Encryption ToolBox](http://cs.utdallas.edu/dspl/cgi-bin/pailliertoolbox/index.php?go=home)**: Implementation of a Threshold variant of the Paillier encryption scheme.
-
 2. **[Gson](https://github.com/google/gson)**: Java library to convert Java Object to their JSON representation and viceversa. 
 
 ## How to Use
