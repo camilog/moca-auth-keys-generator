@@ -4,6 +4,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -12,16 +15,32 @@ import java.io.IOException;
 public class MainWindowController {
 
     @FXML
-    private static Text bulletin_board_label;
+    protected TextField new_bulletin_board_address;
 
     @FXML
-    protected void handleConfigureBBAddressButtonAction(ActionEvent actionEvent) throws IOException, InterruptedException {
+    protected Button change_bb_button;
 
-        Parent root = FXMLLoader.load(getClass().getResource("configWindow.fxml"));
-        Stage stage = new Stage();
-        stage.setTitle("Configure Bulletin Board Address");
-        stage.setScene(new Scene(root, 400, 400));
-        stage.show();
+    @FXML
+    protected Label bulletin_board_label;
+
+    @FXML
+    public void handleDisplayChangeBBAddressButtonAction(ActionEvent actionEvent) throws IOException {
+
+        new_bulletin_board_address.setVisible(true);
+        change_bb_button.setVisible(true);
+
+    }
+
+    @FXML
+    public void handleChangeBBAddressButtonAction(ActionEvent actionEvent) {
+
+        String newBBAddress = new_bulletin_board_address.getText();
+
+        GenerateKeys.setBBAddress(newBBAddress);
+
+        bulletin_board_label.setText(GenerateKeys.getBBAddress());
+        change_bb_button.setVisible(false);
+        new_bulletin_board_address.setVisible(false);
 
     }
 
