@@ -77,14 +77,15 @@ public class GenerateKeys {
 
         // Choose folder where to save the private key (external storage)
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save Public Key");
-        File folder = fileChooser.showSaveDialog(null);
+        fileChooser.setTitle("Save Private Key #" + authorityNumber);
+        fileChooser.setInitialFileName(authorityNumber + "_privateKey");
+        File pathFile = fileChooser.showSaveDialog(null);
 
         // Serialize private key as a Json
         String privateKeyJson = new Gson().toJson(new PrivateKey(getIndependentValues(value)));
 
         // Save JSON in a simple file
-        PrintStream privateKeyOut = new PrintStream(folder.getPath() + "/" + authorityNumber + "_privateKey");
+        PrintStream privateKeyOut = new PrintStream(pathFile);
         privateKeyOut.println(privateKeyJson);
 
     }
@@ -136,10 +137,11 @@ public class GenerateKeys {
         // Choose folder where to save the public key
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save Public Key");
-        File folder = fileChooser.showSaveDialog(null);
+        fileChooser.setInitialFileName("publicKeyN");
+        File pathFile = fileChooser.showSaveDialog(null);
 
         // Save locally the public key in a file called '/publicKeyN'
-        ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(folder.getPath() + "/publicKeyN")));
+        ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(pathFile)));
         oos.writeObject(new BigInteger(publicKey));
         oos.close();
 
