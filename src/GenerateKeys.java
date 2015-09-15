@@ -14,9 +14,7 @@ public class GenerateKeys {
     private static String bulletinBoardAddress = "";
     private static String authorityPublicKeySubDomain = "/authority_public_key";
     private static String dummyShareSubDomain = "/dummy_share";
-
-    // TODO: Implement user and pass verification in order to upload the authority public key and the dummy share
-    // private static String user, pass;
+    private static String candidatesListSubDomain = "/candidates_list";
 
     // Function which generate the public and private keys of the authorities, and uploads the public one
     protected static void generateKeys(int n, int k, SecureRandom r) throws IOException {
@@ -24,7 +22,7 @@ public class GenerateKeys {
         File f = new File("out.log");
         System.setOut(new PrintStream(f));
 
-        // Generate keys with prime factor of n of 256 bits
+        // Generate keys with prime factor of n of 256 bits. Threshold scheme (n,k) plus dummy share.
         PaillierPrivateThresholdKey[] keys = KeyGen.PaillierThresholdKey(256, n + 1, k + 1, r.nextInt());
 
         // Delete ./out.log and recover standard output
@@ -32,7 +30,8 @@ public class GenerateKeys {
         PrintStream ps = new PrintStream(new FileOutputStream(FileDescriptor.out));
         System.setOut(ps);
 
-        // Upload dummy share of the private key in order to combine the partial decryptions
+        // Upload dummy share of the private key in order to combine the partial decryptions (delete the previous one)
+        deleteOldDummyShare();
         uploadDummyShare(keys[0]);
 
         // Save in different files each authority key
@@ -43,6 +42,76 @@ public class GenerateKeys {
         // Upload to the BB and save locally the public key (but before is necessary to make sure that the old key, if there's any, is deleted)
         deleteOldKey();
         uploadAndSavePublicKey(keys[0].getPublicKey().getN().toString(), k);
+
+        downloadAndSaveCandidatesList();
+
+    }
+
+    // TODO
+    private static void deleteOldDummyShare() {
+
+    }
+
+    // TODO: Refactor de la labor de subir/bajar documentos al BB
+    private static void downloadAndSaveCandidatesList() throws IOException {
+
+        String id = getIdOfTheUploadedParameter(bulletinBoardAddress + candidatesListSubDomain).rows[0].id;
+
+        // Set the URL to GET the public key of the authority
+        URL obj = new URL(bulletinBoardAddress + candidatesListSubDomain + "/" + id);
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+        // Add request header
+        con.setRequestMethod("GET");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.getResponseCode();
+
+        // Receive the response
+        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+        String inputLine;
+        StringBuilder response = new StringBuilder();
+        while ((inputLine = in.readLine()) != null)
+            response.append(inputLine);
+        in.close();
+
+        // Serialize the JSON response to an Object (AuthorityPublicKeyResponse)
+        String jsonString = response.toString();
+
+        // Choose folder where to save the candidates list
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Candidates List");
+        fileChooser.setInitialFileName("candidatesList.json");
+        File pathFile = fileChooser.showSaveDialog(null);
+
+        // Save JSON in a simple file
+        PrintStream privateKeyOut = new PrintStream(pathFile);
+        privateKeyOut.println(jsonString);
+
+    }
+
+    private static GenericUniqueParameterResponse getIdOfTheUploadedParameter(String parameterSubDomainURL) throws IOException {
+
+        // Set the URL to GET the public key of the authority
+        URL obj = new URL(parameterSubDomainURL + "/_all_docs");
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+        // Add request header
+        con.setRequestMethod("GET");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.getResponseCode();
+
+        // Receive the response
+        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+        String inputLine;
+        StringBuilder response = new StringBuilder();
+        while ((inputLine = in.readLine()) != null)
+            response.append(inputLine);
+        in.close();
+
+        // Serialize the JSON response to an Object (AuthorityPublicKeyResponse)
+        String jsonString = response.toString();
+        Gson gson = new Gson();
+        return gson.fromJson(jsonString, GenericUniqueParameterResponse.class);
 
     }
 
