@@ -41,7 +41,7 @@ public class GenerateKeys {
 
         // Upload to the BB and save locally the public key (but before is necessary to make sure that the old key, if there's any, is deleted)
         deleteOldKey();
-        uploadAndSavePublicKey(keys[0].getPublicKey().getN().toString(), k);
+        uploadAndSavePublicKey(keys[0].getPublicKey().getN().toString(), keys[0].getPublicKey().getNSPlusOne().toString(), k);
 
         downloadAndSaveCandidatesList();
 
@@ -201,7 +201,7 @@ public class GenerateKeys {
     }
 
     // Upload of the publicKey as a JSON to the bbServer. Also is being stored locally (to give it to the tablet or non-connected to Internet devices).
-    static private void uploadAndSavePublicKey(String publicKey, int threshold) throws IOException {
+    static private void uploadAndSavePublicKey(String publicKeyN, String publicKeyNSPlusOne, int threshold) throws IOException {
 
         // Choose folder where to save the public key
         FileChooser fileChooser = new FileChooser();
@@ -211,7 +211,7 @@ public class GenerateKeys {
 
         // Save locally the public key in a file called '/publicKeyN'
         ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(pathFile)));
-        oos.writeObject(new BigInteger(publicKey));
+        oos.writeObject(new BigInteger(publicKeyN));
         oos.close();
 
         // Set the URL where to POST the public key
@@ -223,7 +223,7 @@ public class GenerateKeys {
         con.setRequestProperty("Content-Type", "application/json");
 
         // Create JSON with the parameters
-        String urlParameters = "{\"value\":" + publicKey + ",\"threshold\":" + threshold + "}";
+        String urlParameters = "{\"value_n\":" + publicKeyN + ",\"threshold\":" + threshold + ",\"value_nsplusone\":" + publicKeyNSPlusOne + "}";
 
         // Send post request
         con.setDoOutput(true);
