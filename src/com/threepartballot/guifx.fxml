@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+<?import java.net.URL?>
+<GridPane fx:controller="com.threepartballot.GUIJavaFXController" xmlns:fx="http://javafx.com/fxml"
+          alignment="CENTER" hgap="10" vgap="10" styleClass="root">
+
+    <Text id="title" text="Authority Keys Generator"
+          GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2"/>
+
+    <Label text="Current Bulletin Board address"
+           GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="2"/>
+
+    <Label id="current_bb_address" text=""
+           GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+    <Button id="configure_bb_address_btn" text="Configure Bulletin Board Address"
+            GridPane.columnIndex="0" GridPane.rowIndex="2"
+            onAction="#handleConfigureBBAction"/>
+
+    <Button id="generate_keys_btn" text="Generate Authority Keys"
+            GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+
+    <stylesheets>
+        <URL value="@guiJavaFX.css"/>
+    </stylesheets>
+
+</GridPane>
