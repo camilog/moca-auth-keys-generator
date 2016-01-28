@@ -30,14 +30,14 @@ public class GenerateKeys {
         PrintStream ps = new PrintStream(new FileOutputStream(FileDescriptor.out));
         System.setOut(ps);
 
-        // Upload dummy share of the private key in order to combine the partial decryptions (delete the previous one)
-        deleteOldDummyShare();
-        uploadDummyShare(keys[0]);
-
         // Save in different files each authority key
         for (int i = 1; i < keys.length; i++) {
             savePrivateKeyToFile(i, keys[i]);
         }
+
+        // Upload dummy share of the private key in order to combine the partial decryptions (delete the previous one)
+        deleteOldDummyShare();
+        uploadDummyShare(keys[0]);
 
         // Upload to the BB and save locally the public key (but before is necessary to make sure that the old key, if there's any, is deleted)
         deleteOldKey();
