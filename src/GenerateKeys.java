@@ -11,10 +11,10 @@ import java.security.SecureRandom;
 
 public class GenerateKeys {
 
-    private static String bulletinBoardAddress = "";
-    private static String authorityPublicKeySubDomain = "/authority_public_key";
-    private static String dummyShareSubDomain = "/dummy_share";
-    private static String candidatesListSubDomain = "/candidates_list";
+    private static String bulletinBoardAddress = "http://0.0.0.0:5000";
+    private static String authorityPublicKeySubDomain = "/api/auth_public_key";
+    private static String dummyShareSubDomain = "/api/dummy_share_key";
+    private static String candidatesListSubDomain = "/api/candidates_list";
 
     // Function which generate the public and private keys of the authorities, and uploads the public one
     protected static void generateKeys(int n, int k, SecureRandom r) throws IOException {
@@ -36,29 +36,28 @@ public class GenerateKeys {
         }
 
         // Upload dummy share of the private key in order to combine the partial decryptions (delete the previous one)
-        deleteOldDummyShare();
+//        deleteOldDummyShare();
         uploadDummyShare(keys[0]);
 
         // Upload to the BB and save locally the public key (but before is necessary to make sure that the old key, if there's any, is deleted)
-        deleteOldKey();
+//        deleteOldKey();
         uploadAndSavePublicKey(keys[0].getPublicKey().getN().toString(), keys[0].getPublicKey().getNSPlusOne().toString(), k);
-
+//
         downloadAndSaveCandidatesList();
 
     }
 
     // TODO
     private static void deleteOldDummyShare() {
-
     }
 
     // TODO: Refactor de la labor de subir/bajar documentos al BB
     private static void downloadAndSaveCandidatesList() throws IOException {
 
-        String id = getIdOfTheUploadedParameter(bulletinBoardAddress + candidatesListSubDomain).rows[0].id;
+//        String id = getIdOfTheUploadedParameter(bulletinBoardAddress + candidatesListSubDomain).rows[0].id;
 
         // Set the URL to GET the public key of the authority
-        URL obj = new URL(bulletinBoardAddress + candidatesListSubDomain + "/" + id);
+        URL obj = new URL(bulletinBoardAddress + candidatesListSubDomain);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
         // Add request header
@@ -163,7 +162,7 @@ public class GenerateKeys {
     public static void deleteOldKey() throws IOException {
 
         // Set the URL to GET the public key of the authority
-        URL obj = new URL(bulletinBoardAddress + authorityPublicKeySubDomain + "/_all_docs");
+        URL obj = new URL(bulletinBoardAddress + authorityPublicKeySubDomain);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
         // Add request header
@@ -223,7 +222,7 @@ public class GenerateKeys {
         con.setRequestProperty("Content-Type", "application/json");
 
         // Create JSON with the parameters
-        String urlParameters = "{\"value_n\":" + publicKeyN + ",\"threshold\":" + threshold + ",\"value_nsplusone\":" + publicKeyNSPlusOne + "}";
+        String urlParameters = "{\"n\":" + publicKeyN + ",\"threshold\":" + threshold + ",\"nsplusone\":" + publicKeyNSPlusOne + "}";
 
         // Send post request
         con.setDoOutput(true);
