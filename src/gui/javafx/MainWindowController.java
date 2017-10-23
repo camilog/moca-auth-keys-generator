@@ -1,13 +1,14 @@
+package gui.javafx;
+
+import crypto.GenerateKeys;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -47,7 +48,7 @@ public class MainWindowController {
     @FXML
     protected void handleGenerateKeysButtonAction(ActionEvent actionEvent) throws IOException {
 
-        Parent root = FXMLLoader.load(getClass().getResource("generationWindow.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("gui/javafx/generationWindow.fxml"));
         Stage stage = new Stage();
         stage.setTitle("Generate Authority Keys");
         stage.setScene(new Scene(root, 700, 300));

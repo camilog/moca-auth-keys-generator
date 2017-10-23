@@ -25,3 +25,11 @@ src/META-INF
 !lib/paillier.jar
 !lib/gson-2.3.1.jar
 *.log
+/moca-auth-keys-generator.iml
+/1_privateKey
+/2_privateKey
+/candidatesList.json
+/3_privateKey
+/publicKeyN
+/out/
+/.idea/

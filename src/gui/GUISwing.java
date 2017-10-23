@@ -42,7 +42,7 @@ public class GUISwing extends JFrame {
         JButton okButton = new JButton("Ok");
         okButton.addActionListener(e -> {
             String newAddress = addressTextField.getText();
-            GenerateKeys.setBBAddress(newAddress);
+            crypto.GenerateKeys.setBBAddress(newAddress);
             uploadBulletinBoardAddressLabel();
             frame.setVisible(false);
         });
@@ -63,7 +63,7 @@ public class GUISwing extends JFrame {
     }
 
     private void uploadBulletinBoardAddressLabel() {
-        bulletinBoardAddressLabel.setText("Current Bulletin Board Address: " + GenerateKeys.getBBAddress());
+        bulletinBoardAddressLabel.setText("Current Bulletin Board Address: " + crypto.GenerateKeys.getBBAddress());
     }
 
     private void showKeysGenerationWindow() {
@@ -81,7 +81,7 @@ public class GUISwing extends JFrame {
             int k = Integer.parseInt(kTextField.getText());
 
             try {
-                GenerateKeys.generateKeys(n, k, new SecureRandom(), 1);
+                crypto.GenerateKeys.generateKeys(n, k, new SecureRandom(), 1);
             } catch (IOException e1) {
                 e1.printStackTrace();
             }

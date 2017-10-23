@@ -1,4 +1,4 @@
-package com.threepartballot;
+package gui.javafx;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -6,15 +6,14 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import java.io.IOException;
-
 public class GUIJavaFX extends Application {
 
     @Override
-    public void start(Stage primaryStage) throws IOException {
-        Parent root = FXMLLoader.load(getClass().getResource("guifx.fxml"));
+    public void start(Stage primaryStage) throws Exception {
 
-        Scene scene = new Scene(root, 500, 400);
+        Parent root = FXMLLoader.load(getClass().getResource("mainWindow.fxml"));
+
+        Scene scene = new Scene(root, 800, 600);
 
         primaryStage.setTitle("Authority Keys Generator");
         primaryStage.setScene(scene);
@@ -22,7 +21,8 @@ public class GUIJavaFX extends Application {
 
     }
 
-    static public void main(String[] args) {
+    public static void main(String[] args) {
         launch(args);
     }
+
 }

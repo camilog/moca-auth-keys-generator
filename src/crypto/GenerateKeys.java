@@ -1,5 +1,10 @@
+package crypto;
+
 import com.google.gson.Gson;
 import javafx.stage.FileChooser;
+import objects.AuthorityPublicKeyResponse;
+import objects.GenericUniqueParameterResponse;
+import objects.PrivateKey;
 import paillierp.key.KeyGen;
 import paillierp.key.PaillierPrivateThresholdKey;
 
@@ -17,7 +22,7 @@ public class GenerateKeys {
     private static String candidatesListSubDomain = "/api/candidates_list";
 
     // Function which generate the public and private keys of the authorities, and uploads the public one
-    protected static void generateKeys(int n, int k, SecureRandom r) throws IOException {
+    public static void generateKeys(int n, int k, SecureRandom r) throws IOException {
         // Set output of generation of keys to ./out.log
         File f = new File("out.log");
         System.setOut(new PrintStream(f));
@@ -73,7 +78,7 @@ public class GenerateKeys {
             response.append(inputLine);
         in.close();
 
-        // Serialize the JSON response to an Object (AuthorityPublicKeyResponse)
+        // Serialize the JSON response to an Object (objects.AuthorityPublicKeyResponse)
         String jsonString = response.toString();
 
         // Choose folder where to save the candidates list
@@ -107,7 +112,7 @@ public class GenerateKeys {
             response.append(inputLine);
         in.close();
 
-        // Serialize the JSON response to an Object (AuthorityPublicKeyResponse)
+        // Serialize the JSON response to an Object (objects.AuthorityPublicKeyResponse)
         String jsonString = response.toString();
         Gson gson = new Gson();
         return gson.fromJson(jsonString, GenericUniqueParameterResponse.class);
@@ -141,7 +146,7 @@ public class GenerateKeys {
     }
 
     // Function to save to a file the private keys as a JSON representing a BigInteger[][] with the independent values to create the same key at the other device
-    public static void savePrivateKeyToFile(int authorityNumber, PaillierPrivateThresholdKey value) throws IOException {
+    private static void savePrivateKeyToFile(int authorityNumber, PaillierPrivateThresholdKey value) throws IOException {
 
         // Choose folder where to save the private key (external storage)
         FileChooser fileChooser = new FileChooser();
@@ -178,7 +183,7 @@ public class GenerateKeys {
             response.append(inputLine);
         in.close();
 
-        // Serialize the JSON response to an Object (AuthorityPublicKeyResponse)
+        // Serialize the JSON response to an Object (objects.AuthorityPublicKeyResponse)
         String jsonString = response.toString();
         Gson gson = new Gson();
         AuthorityPublicKeyResponse authorityPublicKeyResponse = gson.fromJson(jsonString, AuthorityPublicKeyResponse.class);
@@ -255,7 +260,7 @@ public class GenerateKeys {
     }
 
     // Function to set up the bulletin board address
-    protected static void setBBAddress(String newAddress) {
+    public static void setBBAddress(String newAddress) {
         bulletinBoardAddress = newAddress;
     }
 

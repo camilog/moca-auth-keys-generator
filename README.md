@@ -4,17 +4,17 @@ First part of the [*MoCa QR*](http://mocaqr.niclabs.cl) Voting System project.
 Generates the public key to encrypt the ballots, and all the shares on which the private key is separated, to distribute among all the authorities.
 
 ## Files
-1. **GenerateKeys.java**: Main class of the program, where are all the logic and the methods for the generation, uploading and saving of the public and private keys.
+1. **crypto.GenerateKeys.java**: Main class of the program, where are all the logic and the methods for the generation, uploading and saving of the public and private keys.
 
-2. **GUIJavaFX.java**: Class that manages the JavaFX GUI environment. This environment also needs the presence of the following files: mainWindow.fxml, configWindow.fxml, generationWindow.fxml, MainWindowController.java, ConfigWindowController.java, GenerationWindowController.java, javaFx.css and background.jpg.
+2. **GUIJavaFX.java**: Class that manages the JavaFX GUI environment. This environment also needs the presence of the following files: mainWindow.fxml, configWindow.fxml, generationWindow.fxml, gui.MainWindowController.java, ConfigWindowController.java, gui.GenerationWindowController.java, javaFx.css and background.jpg.
 
-3. **AuthorityPublicKeyResponse.java**: Class for the creation of the Authority Public Key object after the retrieving of the JSON from the Bulletin Board server.
+3. **objects.AuthorityPublicKeyResponse.java**: Class for the creation of the Authority Public Key object after the retrieving of the JSON from the Bulletin Board server.
 
-4. **AuthorityPublicKeyValueResponse.java**: Class to manage one of the values that comes in the response of the BB for the Authority Public Key.
+4. **objects.AuthorityPublicKeyValueResponse.java**: Class to manage one of the values that comes in the response of the BB for the Authority Public Key.
 
-5. **RevisionNumber.java**: Class to manage the revision number, this is necessary in order to delete the previous authority public key stored in the BB.
+5. **objects.RevisionNumber.java**: Class to manage the revision number, this is necessary in order to delete the previous authority public key stored in the BB.
 
-6. **PrivateKey.java**: Class to serialize the private key of the authorities and deliver to them in a JSON stored in a file.
+6. **objects.PrivateKey.java**: Class to serialize the private key of the authorities and deliver to them in a JSON stored in a file.
 
 ## External Libraries
 1. **[Paillier Threshol Encryption ToolBox](http://cs.utdallas.edu/dspl/cgi-bin/pailliertoolbox/index.php?go=home)**: Implementation of a Threshold variant of the Paillier encryption scheme.

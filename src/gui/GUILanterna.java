@@ -33,7 +33,7 @@ public class GUILanterna extends Window {
                     "Bulletin Board address", "New Bulletin Board address", "", 20);
 
             // Set new bulletin board address and update label showing it
-            GenerateKeys.setBBAddress(newAddress);
+            crypto.GenerateKeys.setBBAddress(newAddress);
             updateAddressLabel((Label) addressPanel.getComponentAt(0));
 
             // Final message in case of success
@@ -54,7 +54,7 @@ public class GUILanterna extends Window {
 
             // Generate Keys with the different parameters
             try {
-                GenerateKeys.generateKeys(n, k, r, 0);
+                crypto.GenerateKeys.generateKeys(n, k, r, 0);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -78,7 +78,7 @@ public class GUILanterna extends Window {
 
     // Update the text shown in the current bulletin board address
     static private void updateAddressLabel(Label label) {
-        label.setText(GenerateKeys.getBBAddress());
+        label.setText(crypto.GenerateKeys.getBBAddress());
     }
 
     static public void main(String[] args) throws IOException {
@@ -86,7 +86,7 @@ public class GUILanterna extends Window {
         // Create window to display options
         GUILanterna myWindow = new GUILanterna();
         GUIScreen guiScreen = TerminalFacade.createGUIScreen();
-        GenerateKeys.setGuiScreen(guiScreen);
+        crypto.GenerateKeys.setGuiScreen(guiScreen);
         Screen screen = guiScreen.getScreen();
 
         // Start and configuration of the screen

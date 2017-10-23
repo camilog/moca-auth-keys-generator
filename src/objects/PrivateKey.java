@@ -1,3 +1,5 @@
+package objects;
+
 import java.math.BigInteger;
 
 public class PrivateKey {
